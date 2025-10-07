@@ -57,9 +57,9 @@ public class NumberTriangle {
      * Set the root of this NumberTriangle to be the max path sum
      * of this NumberTriangle, as defined in Project Euler problem 18.
      * After this method is called, this NumberTriangle should be a leaf.
-     *
+     * <p>
      * Hint: think recursively and use the idea of partial tracing from first year :)
-     *
+     * <p>
      * Note: a NumberTriangle contains at least one value.
      */
     public void maxSumPath() {
@@ -76,12 +76,12 @@ public class NumberTriangle {
      * Follow path through this NumberTriangle structure ('l' = left; 'r' = right) and
      * return the root value at the end of the path. An empty string will return
      * the root of the NumberTriangle.
-     *
+     * <p>
      * You can decide if you want to use a recursive or an iterative approach in your solution.
-     *
+     * <p>
      * You can assume that:
-     *      the length of path is less than the height of this NumberTriangle structure.
-     *      each character in the string is either 'l' or 'r'
+     * the length of path is less than the height of this NumberTriangle structure.
+     * each character in the string is either 'l' or 'r'
      *
      * @param path the path to follow through this NumberTriangle
      * @return the root value at the location indicated by path
@@ -92,11 +92,12 @@ public class NumberTriangle {
         return -1;
     }
 
-    /** Read in the NumberTriangle structure from a file.
-     *
+    /**
+     * Read in the NumberTriangle structure from a file.
+     * <p>
      * You may assume that it is a valid format with a height of at least 1,
      * so there is at least one line with a number on it to start the file.
-     *
+     * <p>
      * See resources/input_tree.txt for an example NumberTriangle format.
      *
      * @param fname the file to load the NumberTriangle structure from
@@ -107,38 +108,53 @@ public class NumberTriangle {
         // open the file and get a BufferedReader object whose methods
         // are more convenient to work with when reading the file contents.
         InputStream inputStream = NumberTriangle.class.getClassLoader().getResourceAsStream(fname);
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
-
-
-        // TODO define any variables that you want to use to store things
-
-        // will need to return the top of the NumberTriangle,
-        // so might want a variable for that.
-        NumberTriangle top = null;
-
-        String line = br.readLine();
-        while (line != null) {
-
-            // remove when done; this line is included so running starter code prints the contents of the file
-            System.out.println(line);
-
-            // TODO process the line
-
-            //read the next line
-            line = br.readLine();
+        if (inputStream == null) {
+            throw new FileNotFoundException("Resource not found: " + fname);
         }
-        br.close();
-        return top;
-    }
 
-    public static void main(String[] args) throws IOException {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+            // previous row of nodes (top to bottom left->right)
+            java.util.List<NumberTriangle> prevRow = null;
 
-        NumberTriangle mt = NumberTriangle.loadTriangle("input_tree.txt");
+            // will need to return the top of the NumberTriangle,
+            // so might want a variable for that.
+            NumberTriangle top = null;
 
-        // [not for credit]
-        // you can implement NumberTriangle's maxPathSum method if you want to try to solve
-        // Problem 18 from project Euler [not for credit]
-        mt.maxSumPath();
-        System.out.println(mt.getRoot());
+            String line = br.readLine();
+            while (line != null) {
+                String trimmed = line.trim();
+                if (!trimmed.isEmpty()) {
+                    // build current row of nodes from the integers on this line
+                    String[] parts = trimmed.split("\\s+");
+                    java.util.List<NumberTriangle> currRow = new java.util.ArrayList<>(parts.length);
+                    for (String p : parts) {
+                        currRow.add(new NumberTriangle(Integer.parseInt(p)));
+                    }
+
+                    // set top on the first non-empty line
+                    if (top == null) {
+                        top = currRow.get(0);
+                    }
+
+                    // link previous row to current row:
+                    // prev[i].left  -> curr[i]
+                    // prev[i].right -> curr[i + 1]
+                    if (prevRow != null) {
+                        for (int i = 0; i < prevRow.size(); i++) {
+                            prevRow.get(i).setLeft(currRow.get(i));
+                            prevRow.get(i).setRight(currRow.get(i + 1));
+                        }
+                    }
+
+                    // advance
+                    prevRow = currRow;
+                }
+
+                // read the next line
+                line = br.readLine();
+            }
+            br.close();
+            return top;
+        }
     }
 }
